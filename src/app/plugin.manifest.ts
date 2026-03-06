@@ -22,7 +22,7 @@ export default definePlugin<ExampleAppConfig>({
   description: "是一个测试用的插件",
   configSchema,
   app: {
-    root: "src/my-plugin",
+    root: "src/app",
     registryPath: "src/generated/registry.ts",
     defaultConfig: {
       environment: "local-prototype",
@@ -34,7 +34,7 @@ export default definePlugin<ExampleAppConfig>({
     private: true,
   },
   build: {
-    entrySource: "src/my-plugin/index.ts",
+    entrySource: "src/app/index.ts",
     artifactEntry: "./index.js",
     outputDir: "dist",
     registryOutput: "src/generated/registry.ts",
