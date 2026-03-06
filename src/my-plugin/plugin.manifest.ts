@@ -1,0 +1,45 @@
+import { definePlugin } from "../framework/plugin/manifest";
+
+export interface ExampleAppConfig {
+  environment: string;
+  greetingPrefix: string;
+}
+
+const configSchema = {
+  type: "object",
+  properties: {
+    environment: { type: "string" },
+    greetingPrefix: { type: "string" },
+  },
+  required: ["environment", "greetingPrefix"],
+  additionalProperties: false,
+} as const;
+
+export default definePlugin<ExampleAppConfig>({
+  id: "my-plugin",
+  name: "My Plugin",
+  version: "0.1.0",
+  description: "是一个测试用的插件",
+  configSchema,
+  app: {
+    root: "src/my-plugin",
+    registryPath: "src/generated/registry.ts",
+    defaultConfig: {
+      environment: "local-prototype",
+      greetingPrefix: "Architect-grade hello",
+    },
+  },
+  package: {
+    packageName: "@dcuplover/openclaw-my-plugin",
+    private: true,
+  },
+  build: {
+    entrySource: "src/my-plugin/index.ts",
+    artifactEntry: "./index.js",
+    outputDir: "dist",
+    registryOutput: "src/generated/registry.ts",
+    artifactRoot: "artifacts/my-plugin",
+    packageJsonOutput: "artifacts/my-plugin/package.json",
+    pluginManifestOutput: "artifacts/my-plugin/openclaw.plugin.json",
+  },
+});
