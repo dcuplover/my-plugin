@@ -17,7 +17,7 @@ const configSchema = {
 
 export default definePlugin<ExampleAppConfig>({
   id: "my-plugin",
-  name: "My Plugin",
+  name: "@dcuplover/my-plugin",
   version: "0.1.0",
   description: "是一个测试用的插件",
   configSchema,
@@ -30,7 +30,7 @@ export default definePlugin<ExampleAppConfig>({
     },
   },
   package: {
-    packageName: "@dcuplover/openclaw-my-plugin",
+    packageName: "@dcuplover/my-plugin",
     private: true,
   },
   build: {
