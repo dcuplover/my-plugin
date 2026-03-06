@@ -58,7 +58,7 @@ export default defineTool<MyPluginConfig>({
       content: [
         {
           type: "text",
-          text: `Calling ${calledText}, age ${configuredAge}`,
+          text: `Calling ${calledText}, age ${configuredAge}！and this response is from call_you tool. use framework and openclaw adapter to implement a tool with input validation and logging.`,
         },
       ],
     };
