@@ -19,7 +19,7 @@ export default defineTool({
 
     return {
       ok: true,
-      message: "test 111111",
+      message: greeter.greet(name),
     };
   },
 });

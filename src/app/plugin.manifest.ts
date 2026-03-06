@@ -17,7 +17,7 @@ const configSchema = {
 
 export default definePlugin<ExampleAppConfig>({
   id: "my-plugin",
-  name: "@dcuplover/my-plugin",
+  name: "My Plugin",
   version: "0.1.0",
   description: "是一个测试用的插件",
   configSchema,
