@@ -1,8 +1,11 @@
 {
   "id": "my-plugin",
   "name": "My Plugin",
-  "description": "A minimal custom plugin",
   "version": "0.1.0",
+  "description": "My custom OpenClaw test plugin",
+  "runtime": "node",
+  "entry": "./dist/app/index.js",
+  "displayName": "My Plugin",
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
@@ -13,6 +16,8 @@
         "minimum": 0
       }
     },
-    "required": ["age"]
+    "required": [
+      "age"
+    ]
   }
 }

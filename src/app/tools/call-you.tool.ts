@@ -21,13 +21,13 @@ export default defineTool<MyPluginConfig>({
     required: ["name"],
   },
   execute(params, context) {
-    const configuredAge = context.config?.age;
+    const configuredAge = typeof context.config?.age === "number" ? context.config.age : undefined;
     const rawName = typeof params.name === "string" ? params.name : "";
     const rawTitle = typeof params.title === "string" ? params.title : "";
     const name = rawName.trim();
     const title = rawTitle.trim();
 
-    if (!Number.isInteger(configuredAge) || configuredAge < 0) {
+    if (configuredAge === undefined || !Number.isInteger(configuredAge) || configuredAge < 0) {
       context.logger.warn("call_you invoked without a valid configured age");
       return {
         content: [

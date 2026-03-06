@@ -91,7 +91,7 @@ async function registerHooks<TConfig>(
         await definition.handle(payload, context);
       },
     });
-    context.diagnostics.loadedHooks.push(definition.name);
+    context.diagnostics.loadedHooks.push(`${definition.event}:${definition.name}`);
   }
 }
 
@@ -99,7 +99,7 @@ async function registerCommands<TConfig>(
   definitions: CommandDefinition<TConfig>[],
   context: RuntimeContext<TConfig>
 ): Promise<void> {
-  const ordered = [...definitions].sort((left, right) => (right.priority ?? 0) - (left.priority ?? 0));
+  const ordered = [...definitions].sort((left, right) => left.name.localeCompare(right.name));
   for (const definition of ordered) {
     await context.host.registerCommand({
       name: definition.name,
@@ -154,7 +154,7 @@ export async function bootstrapMicrokernel<TConfig>(
       continue;
     }
     await startTimed(`module:start:${moduleDefinition.name}`, async () => {
-      await moduleDefinition.start(context);
+      await moduleDefinition.start?.(context);
     });
     startedModules.push(moduleDefinition);
   }

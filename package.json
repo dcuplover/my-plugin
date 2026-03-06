@@ -2,12 +2,25 @@
   "name": "my-plugin",
   "version": "0.1.0",
   "description": "My custom OpenClaw test plugin",
+  "main": "./dist/app/index.js",
+  "types": "./dist/app/index.d.ts",
   "type": "module",
   "private": true,
   "scripts": {
-    "generate:registry": "node ./scripts/generate-registry.mjs"
+    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "generate:registry": "node ./scripts/generate-registry.mjs ./src/app ./src/generated/registry.ts",
+    "sync:plugin-package-json": "node ./scripts/sync-package-json.mjs ./dist/app/plugin.manifest.js ./dist/package.json",
+    "generate:plugin-manifest": "node ./scripts/generate-plugin-manifest.mjs ./dist/app/plugin.manifest.js ./dist/openclaw.plugin.json",
+    "validate:plugin": "node ./scripts/validate-plugin.mjs ./dist/app/plugin.manifest.js ./dist/package.json ./dist/openclaw.plugin.json",
+    "typecheck": "npx tsc -p tsconfig.json --noEmit",
+    "build": "npm run generate:registry && npx tsc -p tsconfig.json && npm run sync:plugin-package-json && npm run generate:plugin-manifest && npm run validate:plugin",
+    "build:watch": "npm run generate:registry && npx tsc -p tsconfig.json --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
   },
   "openclaw": {
-    "extensions": ["./index.ts"]
+    "extensions": ["./dist/app/index.js"]
   }
 }
