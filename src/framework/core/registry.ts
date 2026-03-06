@@ -1,6 +1,8 @@
 import type { DefinitionLoader } from "./types";
 
-export async function loadDefinitions<T>(loaders: Array<DefinitionLoader<T>>): Promise<T[]> {
+export async function loadDefinitions<T>(
+  loaders: Array<DefinitionLoader<T>>
+): Promise<T[]> {
   const resolved: T[] = [];
 
   for (const load of loaders) {

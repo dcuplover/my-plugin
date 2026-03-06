@@ -1,68 +1,56 @@
-import type { ServiceContainer } from "../framework/core/types";
-
 export interface MyPluginConfig {
-  age?: number;
-  greetingPrefix?: string;
-  defaultTitle?: string;
-}
-
-export interface ResolvedMyPluginConfig {
   age: number;
   greetingPrefix: string;
   defaultTitle: string;
 }
 
+export interface ResolvedMyPluginConfig extends MyPluginConfig {}
+
 export const MY_PLUGIN_CONFIG_SERVICE = "my-plugin.config";
 
-export const DEFAULT_MY_PLUGIN_CONFIG: ResolvedMyPluginConfig = {
+export const defaultMyPluginConfig: ResolvedMyPluginConfig = {
   age: 18,
   greetingPrefix: "Hello from My Plugin",
   defaultTitle: "friend",
 };
 
-function normalizeNonNegativeInteger(value: unknown, fallback: number): number {
+export const myPluginConfigSchema = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    age: {
+      type: "integer",
+      description: "Optional age value provided from openclaw.json.",
+      minimum: 0,
+      default: defaultMyPluginConfig.age,
+    },
+    greetingPrefix: {
+      type: "string",
+      description: "Greeting prefix used by framework commands.",
+      default: defaultMyPluginConfig.greetingPrefix,
+    },
+    defaultTitle: {
+      type: "string",
+      description: "Fallback title used by the call_you tool when none is supplied.",
+      default: defaultMyPluginConfig.defaultTitle,
+    },
+  },
+} as const;
+
+function toNonEmptyString(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+function toNonNegativeInteger(value: unknown, fallback: number): number {
   return typeof value === "number" && Number.isInteger(value) && value >= 0 ? value : fallback;
 }
 
-function normalizeText(value: unknown, fallback: string): string {
-  if (typeof value !== "string") {
-    return fallback;
-  }
+export function normalizeMyPluginConfig(config: unknown): ResolvedMyPluginConfig {
+  const record = typeof config === "object" && config !== null ? (config as Record<string, unknown>) : {};
 
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : fallback;
-}
-
-export function normalizeMyPluginConfig(
-  config?: Partial<MyPluginConfig>
-): ResolvedMyPluginConfig {
   return {
-    age: normalizeNonNegativeInteger(config?.age, DEFAULT_MY_PLUGIN_CONFIG.age),
-    greetingPrefix: normalizeText(
-      config?.greetingPrefix,
-      DEFAULT_MY_PLUGIN_CONFIG.greetingPrefix
-    ),
-    defaultTitle: normalizeText(config?.defaultTitle, DEFAULT_MY_PLUGIN_CONFIG.defaultTitle),
+    age: toNonNegativeInteger(record.age, defaultMyPluginConfig.age),
+    greetingPrefix: toNonEmptyString(record.greetingPrefix, defaultMyPluginConfig.greetingPrefix),
+    defaultTitle: toNonEmptyString(record.defaultTitle, defaultMyPluginConfig.defaultTitle),
   };
-}
-
-export function storeMyPluginConfig(
-  container: ServiceContainer,
-  config?: Partial<MyPluginConfig>
-): ResolvedMyPluginConfig {
-  const normalized = normalizeMyPluginConfig(config);
-  container.register(MY_PLUGIN_CONFIG_SERVICE, normalized);
-  return normalized;
-}
-
-export function readMyPluginConfig(source: {
-  config?: Partial<MyPluginConfig>;
-  container: ServiceContainer;
-}): ResolvedMyPluginConfig {
-  const cached = source.container.tryResolve<ResolvedMyPluginConfig>(MY_PLUGIN_CONFIG_SERVICE);
-  if (cached) {
-    return cached;
-  }
-
-  return storeMyPluginConfig(source.container, source.config);
 }

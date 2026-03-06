@@ -1,6 +1,11 @@
 import { defineTool } from "../../framework/core/definition";
-import type { MyPluginConfig } from "../plugin-config";
-import { readMyPluginConfig } from "../plugin-config";
+import type { RuntimeContext } from "../../framework/core/types";
+import type { MyPluginConfig, ResolvedMyPluginConfig } from "../plugin-config";
+import { MY_PLUGIN_CONFIG_SERVICE } from "../plugin-config";
+
+function readMyPluginConfig(context: RuntimeContext<MyPluginConfig>): ResolvedMyPluginConfig {
+  return context.container.resolve<ResolvedMyPluginConfig>(MY_PLUGIN_CONFIG_SERVICE);
+}
 
 export default defineTool<MyPluginConfig>({
   kind: "tool",

@@ -5,7 +5,6 @@ function write(level: string, message: string, meta?: Record<string, unknown>): 
     console.log(`[${level}] ${message}`, meta);
     return;
   }
-
   console.log(`[${level}] ${message}`);
 }
 

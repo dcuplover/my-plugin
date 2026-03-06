@@ -1,29 +1,6 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
 import { promises as fs } from "node:fs";
-
-function unwrapDefaultExport(moduleNamespace) {
-  if (moduleNamespace && typeof moduleNamespace === "object" && "default" in moduleNamespace) {
-    const candidate = moduleNamespace.default;
-    if (candidate && typeof candidate === "object" && "default" in candidate) {
-      return candidate.default;
-    }
-    return candidate;
-  }
-
-  return moduleNamespace;
-}
-
-function unwrapModuleExports(moduleNamespace) {
-  if (moduleNamespace && typeof moduleNamespace === "object" && "default" in moduleNamespace) {
-    const candidate = moduleNamespace.default;
-    if (candidate && typeof candidate === "object") {
-      return candidate;
-    }
-  }
-
-  return moduleNamespace;
-}
+import path from "node:path";
 
 const [, , manifestModuleArg, packageJsonArg] = process.argv;
 
@@ -35,19 +12,19 @@ if (!manifestModuleArg) {
 const cwd = process.cwd();
 const manifestModulePath = path.resolve(cwd, manifestModuleArg);
 const packageJsonPath = packageJsonArg ? path.resolve(cwd, packageJsonArg) : undefined;
+const require = createRequire(import.meta.url);
 
-const manifestModule = await import(pathToFileURL(manifestModulePath).href);
-const frameworkModule = await import(pathToFileURL(path.resolve(cwd, "./dist/index.js")).href);
-const pluginManifest = unwrapDefaultExport(manifestModule);
-const frameworkExports = unwrapModuleExports(frameworkModule);
-const toPackageJsonFields = frameworkExports.toPackageJsonFields;
+const manifestModule = require(manifestModulePath);
+const frameworkModule = require(path.resolve(cwd, "./dist/index.js"));
+const pluginManifest = manifestModule.default;
+const toPackageJsonFields = frameworkModule.toPackageJsonFields;
 
 if (!pluginManifest || typeof pluginManifest !== "object") {
   throw new Error(`Compiled module does not export a default plugin manifest: ${manifestModulePath}`);
 }
 
 if (typeof toPackageJsonFields !== "function") {
-  throw new Error("Compiled framework does not export toPackageJsonFields(). Check dist/index.js");
+  throw new Error(`Compiled framework does not export toPackageJsonFields(). Check dist/index.js`);
 }
 
 const nextFields = toPackageJsonFields(pluginManifest);

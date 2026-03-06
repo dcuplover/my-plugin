@@ -1,29 +1,6 @@
-import path from "node:path";
-import { pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
 import { promises as fs } from "node:fs";
-
-function unwrapDefaultExport(moduleNamespace) {
-  if (moduleNamespace && typeof moduleNamespace === "object" && "default" in moduleNamespace) {
-    const candidate = moduleNamespace.default;
-    if (candidate && typeof candidate === "object" && "default" in candidate) {
-      return candidate.default;
-    }
-    return candidate;
-  }
-
-  return moduleNamespace;
-}
-
-function unwrapModuleExports(moduleNamespace) {
-  if (moduleNamespace && typeof moduleNamespace === "object" && "default" in moduleNamespace) {
-    const candidate = moduleNamespace.default;
-    if (candidate && typeof candidate === "object") {
-      return candidate;
-    }
-  }
-
-  return moduleNamespace;
-}
+import path from "node:path";
 
 const [, , manifestModuleArg, packageJsonArg, openClawPluginJsonArg] = process.argv;
 
@@ -38,12 +15,7 @@ const cwd = process.cwd();
 const manifestModulePath = path.resolve(cwd, manifestModuleArg);
 const packageJsonPath = packageJsonArg ? path.resolve(cwd, packageJsonArg) : undefined;
 const openClawPluginJsonPath = openClawPluginJsonArg ? path.resolve(cwd, openClawPluginJsonArg) : undefined;
-const manifestModule = await import(pathToFileURL(manifestModulePath).href);
-const frameworkModule = await import(pathToFileURL(path.resolve(cwd, "./dist/index.js")).href);
-const pluginManifest = unwrapDefaultExport(manifestModule);
-const frameworkExports = unwrapModuleExports(frameworkModule);
-const toPackageJsonFields = frameworkExports.toPackageJsonFields;
-const toOpenClawPluginJson = frameworkExports.toOpenClawPluginJson;
+const require = createRequire(import.meta.url);
 
 function stableStringify(value) {
   return JSON.stringify(value, null, 2);
@@ -54,6 +26,12 @@ function compareField(mismatches, label, actual, expected) {
     mismatches.push({ label, actual, expected });
   }
 }
+
+const manifestModule = require(manifestModulePath);
+const frameworkModule = require(path.resolve(cwd, "./dist/index.js"));
+const pluginManifest = manifestModule.default;
+const toPackageJsonFields = frameworkModule.toPackageJsonFields;
+const toOpenClawPluginJson = frameworkModule.toOpenClawPluginJson;
 
 if (!pluginManifest || typeof pluginManifest !== "object") {
   throw new Error(`Compiled module does not export a default plugin manifest: ${manifestModulePath}`);
@@ -72,7 +50,8 @@ const expectedOpenClawPluginJson = toOpenClawPluginJson(pluginManifest);
 const resolvedPackageJsonPath =
   packageJsonPath ?? path.resolve(cwd, pluginManifest.build?.packageJsonOutput ?? "./package.json");
 const resolvedOpenClawPluginJsonPath =
-  openClawPluginJsonPath ?? path.resolve(cwd, pluginManifest.build?.pluginManifestOutput ?? "./openclaw.plugin.json");
+  openClawPluginJsonPath ??
+  path.resolve(cwd, pluginManifest.build?.pluginManifestOutput ?? "./openclaw.plugin.json");
 const packageJson = JSON.parse(await fs.readFile(resolvedPackageJsonPath, "utf8"));
 const openClawPluginJson = JSON.parse(await fs.readFile(resolvedOpenClawPluginJsonPath, "utf8"));
 const mismatches = [];

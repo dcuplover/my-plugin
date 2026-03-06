@@ -34,13 +34,6 @@ export interface OpenClawLikeApi {
     info?: (...args: unknown[]) => void;
     warn?: (...args: unknown[]) => void;
     error?: (...args: unknown[]) => void;
-    debug?: (...args: unknown[]) => void;
-  };
-  logger?: {
-    info?: (...args: unknown[]) => void;
-    warn?: (...args: unknown[]) => void;
-    error?: (...args: unknown[]) => void;
-    debug?: (...args: unknown[]) => void;
   };
 }
 
@@ -113,7 +106,6 @@ function emitCommandResult(result: unknown, logger?: CliLoggerLike | FrameworkLo
 }
 
 export function createOpenClawAdapter(api: OpenClawLikeApi, logger?: FrameworkLogger): HostAdapter {
-
   return {
     registerTool(tool: HostToolRegistration): void {
       api.registerTool(

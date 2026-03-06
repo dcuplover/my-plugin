@@ -1,47 +1,25 @@
 import { definePlugin } from "../framework/plugin/manifest";
 import {
-  DEFAULT_MY_PLUGIN_CONFIG,
+  defaultMyPluginConfig,
+  myPluginConfigSchema,
   type MyPluginConfig,
 } from "./plugin-config";
-
-const configSchema = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    age: {
-      type: "integer",
-      description: "Optional age value provided from openclaw.json.",
-      minimum: 0,
-      default: DEFAULT_MY_PLUGIN_CONFIG.age,
-    },
-    greetingPrefix: {
-      type: "string",
-      description: "Greeting prefix used by framework commands.",
-      default: DEFAULT_MY_PLUGIN_CONFIG.greetingPrefix,
-    },
-    defaultTitle: {
-      type: "string",
-      description: "Fallback title used by the call_you tool when none is supplied.",
-      default: DEFAULT_MY_PLUGIN_CONFIG.defaultTitle,
-    },
-  },
-} as const;
 
 export default definePlugin<MyPluginConfig>({
   id: "my-plugin",
   name: "My Plugin",
   version: "0.1.0",
-  description: "Framework-backed OpenClaw plugin sample",
-  configSchema,
+  description: "Framework-backed OpenClaw test plugin with one tool and one CLI command.",
   openclaw: {
     runtime: "node",
     entry: "./app/index.js",
     displayName: "My Plugin",
   },
+  configSchema: myPluginConfigSchema,
   app: {
     root: "src/app",
     registryPath: "src/generated/registry.ts",
-    defaultConfig: DEFAULT_MY_PLUGIN_CONFIG,
+    defaultConfig: defaultMyPluginConfig,
   },
   package: {
     packageName: "my-plugin",

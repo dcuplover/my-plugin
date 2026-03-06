@@ -192,7 +192,6 @@ export async function bootstrapMicrokernel<TConfig>(
           await moduleDefinition.shutdown?.(context);
         });
       }
-
       logger.info("Microkernel shutdown complete", { appId: options.appId });
     },
   };

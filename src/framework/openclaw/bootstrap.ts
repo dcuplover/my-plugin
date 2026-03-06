@@ -27,32 +27,27 @@ function mergeConfig<TConfig>(defaultConfig: TConfig | undefined, overrideConfig
 }
 
 function createOpenClawLogger(api: OpenClawLikeApi, prefix: string): FrameworkLogger {
-  const hostLogger = api.log ?? api.logger;
-
   return {
     info(message, meta) {
-      hostLogger?.info?.(`[${prefix}] ${message}`, meta);
-      if (!hostLogger?.info) {
+      api.log?.info?.(`[${prefix}] ${message}`, meta);
+      if (!api.log?.info) {
         createConsoleLogger(prefix).info(message, meta);
       }
     },
     warn(message, meta) {
-      hostLogger?.warn?.(`[${prefix}] ${message}`, meta);
-      if (!hostLogger?.warn) {
+      api.log?.warn?.(`[${prefix}] ${message}`, meta);
+      if (!api.log?.warn) {
         createConsoleLogger(prefix).warn(message, meta);
       }
     },
     error(message, meta) {
-      hostLogger?.error?.(`[${prefix}] ${message}`, meta);
-      if (!hostLogger?.error) {
+      api.log?.error?.(`[${prefix}] ${message}`, meta);
+      if (!api.log?.error) {
         createConsoleLogger(prefix).error(message, meta);
       }
     },
     debug(message, meta) {
-      hostLogger?.debug?.(`[${prefix}] ${message}`, meta);
-      if (!hostLogger?.debug) {
-        createConsoleLogger(prefix).debug?.(message, meta);
-      }
+      createConsoleLogger(prefix).debug?.(message, meta);
     },
   };
 }

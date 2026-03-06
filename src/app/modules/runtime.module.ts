@@ -2,7 +2,7 @@ import { defineModule } from "../../framework/core/definition";
 import type { MyPluginConfig } from "../plugin-config";
 import {
   MY_PLUGIN_CONFIG_SERVICE,
-  storeMyPluginConfig,
+  normalizeMyPluginConfig,
   type ResolvedMyPluginConfig,
 } from "../plugin-config";
 
@@ -20,12 +20,13 @@ export default defineModule<MyPluginConfig>({
   phase: "bootstrap",
   provides: [MY_PLUGIN_CONFIG_SERVICE, MY_PLUGIN_RUNTIME_SERVICE],
   setup(context) {
-    const config = storeMyPluginConfig(context.container, context.config);
+    const config = normalizeMyPluginConfig(context.config);
     const runtimeState: MyPluginRuntimeState = {
       bootedAt: new Date().toISOString(),
       config,
     };
 
+    context.container.register(MY_PLUGIN_CONFIG_SERVICE, config);
     context.container.register(MY_PLUGIN_RUNTIME_SERVICE, runtimeState);
     context.logger.info("Prepared plugin runtime module", {
       age: config.age,
