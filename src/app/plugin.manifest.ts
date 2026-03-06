@@ -36,7 +36,7 @@ export default definePlugin<ExampleAppConfig>({
   build: {
     entrySource: "src/app/index.ts",
     artifactEntry: "./index.js",
-    outputDir: "dist",
+    outputDir: "artifacts",
     registryOutput: "src/generated/registry.ts",
     artifactRoot: "artifacts/my-plugin",
     packageJsonOutput: "artifacts/my-plugin/package.json",
