@@ -24,11 +24,26 @@ export default function register(api: any) {
     },
     // OpenClaw 工具执行入口（签名：execute(callId, params)）。
     execute: async (_callId: unknown, params: Record<string, unknown>) => {
+      const configuredAge = api.pluginConfig?.age;
+
       // 运行时输入规范化：去除空白，并将缺失值兜底为空字符串。
       const rawName = typeof params?.name === "string" ? params.name : "";
       const rawTitle = typeof params?.title === "string" ? params.title : "";
       const name = rawName.trim();
       const title = rawTitle.trim();
+
+      // 插件配置来自 openclaw.json 的 plugins.entries.<id>.config。
+      if (!Number.isInteger(configuredAge) || configuredAge < 0) {
+        api.logger.warn("call_you invoked without a valid configured age");
+        return {
+          content: [
+            {
+              type: "text",
+              text: "`age` must be configured as a non-negative integer in openclaw.json.",
+            },
+          ],
+        };
+      }
 
       // 防御式兜底校验：即使 schema 已要求 `name`，这里仍做二次保护。
       if (!name) {
@@ -44,14 +59,14 @@ export default function register(api: any) {
       }
 
       const calledText = title ? `${title} ${name}` : name;
-      api.logger.info(`call_you invoked for ${calledText}`);
+      api.logger.info(`call_you invoked for ${calledText} with configured age ${configuredAge}`);
 
       // 返回稳定的结构化结果，便于下游解析与调试。
       return {
         content: [
           {
             type: "text",
-            text: `Calling ${calledText}`,
+            text: `Calling ${calledText}, age ${configuredAge}`,
           },
         ],
       };

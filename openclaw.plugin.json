@@ -5,7 +5,14 @@
   "version": "0.1.0",
   "configSchema": {
     "type": "object",
-    "additionalProperties": true,
-    "properties": {}
+    "additionalProperties": false,
+    "properties": {
+      "age": {
+        "type": "integer",
+        "description": "Required age value provided from openclaw.json.",
+        "minimum": 0
+      }
+    },
+    "required": ["age"]
   }
 }
