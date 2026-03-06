@@ -70,9 +70,9 @@ if (typeof toOpenClawPluginJson !== "function") {
 const expectedPackageJsonFields = toPackageJsonFields(pluginManifest);
 const expectedOpenClawPluginJson = toOpenClawPluginJson(pluginManifest);
 const resolvedPackageJsonPath =
-  packageJsonPath ?? path.resolve(cwd, pluginManifest.build?.packageJsonOutput ?? "./dist/package.json");
+  packageJsonPath ?? path.resolve(cwd, pluginManifest.build?.packageJsonOutput ?? "./package.json");
 const resolvedOpenClawPluginJsonPath =
-  openClawPluginJsonPath ?? path.resolve(cwd, pluginManifest.build?.pluginManifestOutput ?? "./dist/openclaw.plugin.json");
+  openClawPluginJsonPath ?? path.resolve(cwd, pluginManifest.build?.pluginManifestOutput ?? "./openclaw.plugin.json");
 const packageJson = JSON.parse(await fs.readFile(resolvedPackageJsonPath, "utf8"));
 const openClawPluginJson = JSON.parse(await fs.readFile(resolvedOpenClawPluginJsonPath, "utf8"));
 const mismatches = [];

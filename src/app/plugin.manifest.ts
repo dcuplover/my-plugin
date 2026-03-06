@@ -1,5 +1,8 @@
 import { definePlugin } from "../framework/plugin/manifest";
-import type { MyPluginConfig } from "./plugin-config";
+import {
+  DEFAULT_MY_PLUGIN_CONFIG,
+  type MyPluginConfig,
+} from "./plugin-config";
 
 const configSchema = {
   type: "object",
@@ -7,18 +10,28 @@ const configSchema = {
   properties: {
     age: {
       type: "integer",
-      description: "Required age value provided from openclaw.json.",
+      description: "Optional age value provided from openclaw.json.",
       minimum: 0,
+      default: DEFAULT_MY_PLUGIN_CONFIG.age,
+    },
+    greetingPrefix: {
+      type: "string",
+      description: "Greeting prefix used by framework commands.",
+      default: DEFAULT_MY_PLUGIN_CONFIG.greetingPrefix,
+    },
+    defaultTitle: {
+      type: "string",
+      description: "Fallback title used by the call_you tool when none is supplied.",
+      default: DEFAULT_MY_PLUGIN_CONFIG.defaultTitle,
     },
   },
-  required: ["age"],
 } as const;
 
 export default definePlugin<MyPluginConfig>({
   id: "my-plugin",
   name: "My Plugin",
   version: "0.1.0",
-  description: "My custom OpenClaw test plugin",
+  description: "Framework-backed OpenClaw plugin sample",
   configSchema,
   openclaw: {
     runtime: "node",
@@ -28,6 +41,7 @@ export default definePlugin<MyPluginConfig>({
   app: {
     root: "src/app",
     registryPath: "src/generated/registry.ts",
+    defaultConfig: DEFAULT_MY_PLUGIN_CONFIG,
   },
   package: {
     packageName: "my-plugin",
@@ -37,7 +51,8 @@ export default definePlugin<MyPluginConfig>({
     entrySource: "src/app/index.ts",
     outputDir: "dist",
     registryOutput: "src/generated/registry.ts",
-    packageJsonOutput: "dist/package.json",
-    pluginManifestOutput: "dist/openclaw.plugin.json",
+    artifactRoot: "artifacts/my-plugin",
+    packageJsonOutput: "artifacts/my-plugin/package.json",
+    pluginManifestOutput: "artifacts/my-plugin/openclaw.plugin.json",
   },
 });

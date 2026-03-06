@@ -7,13 +7,14 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "clean": "node -e \"require('node:fs').rmSync('dist', { recursive: true, force: true })\"",
+    "clean": "node -e \"const fs=require('node:fs'); fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('artifacts', { recursive: true, force: true });\"",
     "generate:registry": "node ./scripts/generate-registry.mjs ./src/app ./src/generated/registry.ts",
-    "sync:plugin-package-json": "node ./scripts/sync-package-json.mjs ./dist/app/plugin.manifest.js ./dist/package.json",
-    "generate:plugin-manifest": "node ./scripts/generate-plugin-manifest.mjs ./dist/app/plugin.manifest.js ./dist/openclaw.plugin.json",
-    "validate:plugin": "node ./scripts/validate-plugin.mjs ./dist/app/plugin.manifest.js ./dist/package.json ./dist/openclaw.plugin.json",
+    "stage:plugin-artifact": "node ./scripts/stage-plugin-artifact.mjs ./dist/app/plugin.manifest.js",
+    "sync:plugin-package-json": "node ./scripts/sync-package-json.mjs ./dist/app/plugin.manifest.js",
+    "generate:plugin-manifest": "node ./scripts/generate-plugin-manifest.mjs ./dist/app/plugin.manifest.js",
+    "validate:plugin": "node ./scripts/validate-plugin.mjs ./dist/app/plugin.manifest.js",
     "typecheck": "npx tsc -p tsconfig.json --noEmit",
-    "build": "npm run generate:registry && npx tsc -p tsconfig.json && npm run sync:plugin-package-json && npm run generate:plugin-manifest && npm run validate:plugin",
+    "build": "npm run generate:registry && npx tsc -p tsconfig.json && npm run stage:plugin-artifact && npm run sync:plugin-package-json && npm run generate:plugin-manifest && npm run validate:plugin",
     "build:watch": "npm run generate:registry && npx tsc -p tsconfig.json --watch"
   },
   "devDependencies": {

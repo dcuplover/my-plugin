@@ -3,6 +3,7 @@ import type { MyPluginConfig } from "../app/plugin-config";
 
 export const registry: DefinitionRegistry<MyPluginConfig> = {
   modules: [
+  () => import("../app/modules/runtime.module"),
   ],
   tools: [
   () => import("../app/tools/call-you.tool"),

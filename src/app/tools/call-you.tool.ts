@@ -1,5 +1,6 @@
 import { defineTool } from "../../framework/core/definition";
 import type { MyPluginConfig } from "../plugin-config";
+import { readMyPluginConfig } from "../plugin-config";
 
 export default defineTool<MyPluginConfig>({
   kind: "tool",
@@ -21,23 +22,11 @@ export default defineTool<MyPluginConfig>({
     required: ["name"],
   },
   execute(params, context) {
-    const configuredAge = typeof context.config?.age === "number" ? context.config.age : undefined;
+    const config = readMyPluginConfig(context);
     const rawName = typeof params.name === "string" ? params.name : "";
     const rawTitle = typeof params.title === "string" ? params.title : "";
     const name = rawName.trim();
-    const title = rawTitle.trim();
-
-    if (configuredAge === undefined || !Number.isInteger(configuredAge) || configuredAge < 0) {
-      context.logger.warn("call_you invoked without a valid configured age");
-      return {
-        content: [
-          {
-            type: "text",
-            text: "`age` must be configured as a non-negative integer in openclaw.json.",
-          },
-        ],
-      };
-    }
+    const title = rawTitle.trim() || config.defaultTitle;
 
     if (!name) {
       context.logger.warn("call_you invoked with empty name");
@@ -52,13 +41,13 @@ export default defineTool<MyPluginConfig>({
     }
 
     const calledText = title ? `${title} ${name}` : name;
-    context.logger.info("call_you invoked", { calledText, configuredAge });
+    context.logger.info("call_you invoked", { calledText, configuredAge: config.age });
 
     return {
       content: [
         {
           type: "text",
-          text: `Calling ${calledText}, age ${configuredAge}！and this response is from call_you tool. use framework and openclaw adapter to implement a tool with input validation and logging.`,
+          text: `Calling ${calledText}. Configured age: ${config.age}. This response comes from the framework tool adapter.`,
         },
       ],
     };

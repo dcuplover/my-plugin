@@ -36,19 +36,6 @@ const cwd = process.cwd();
 const manifestModulePath = path.resolve(cwd, manifestModuleArg);
 const packageJsonPath = packageJsonArg ? path.resolve(cwd, packageJsonArg) : undefined;
 
-const resolvedPackageJsonPath = packageJsonPath ?? path.resolve(cwd, "./dist/package.json");
-await fs.mkdir(path.dirname(resolvedPackageJsonPath), { recursive: true });
-
-try {
-  await fs.access(resolvedPackageJsonPath);
-} catch (error) {
-  if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
-    await fs.writeFile(resolvedPackageJsonPath, "{}\n", "utf8");
-  } else {
-    throw error;
-  }
-}
-
 const manifestModule = await import(pathToFileURL(manifestModulePath).href);
 const frameworkModule = await import(pathToFileURL(path.resolve(cwd, "./dist/index.js")).href);
 const pluginManifest = unwrapDefaultExport(manifestModule);
@@ -64,6 +51,8 @@ if (typeof toPackageJsonFields !== "function") {
 }
 
 const nextFields = toPackageJsonFields(pluginManifest);
+const resolvedPackageJsonPath =
+  packageJsonPath ?? path.resolve(cwd, pluginManifest.build?.packageJsonOutput ?? "./package.json");
 
 let existingPackageJson = {};
 try {
