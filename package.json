@@ -4,6 +4,9 @@
   "description": "My custom OpenClaw test plugin",
   "type": "module",
   "private": true,
+  "scripts": {
+    "generate:registry": "node ./scripts/generate-registry.mjs"
+  },
   "openclaw": {
     "extensions": ["./index.ts"]
   }

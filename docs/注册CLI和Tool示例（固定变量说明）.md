@@ -117,9 +117,137 @@ export default function register(api) {
 3. 错误：`openclaw.plugin.json` 中 `configSchema` 过严，导致配置被拒绝。
 正确：确保 `configSchema` 与 `plugins.entries.<id>.config` 的实际字段一致。
 
-## 四、最小测试清单
+## 四、插件配置项示例：在 `openclaw.plugin.json` 中声明 `age`
+
+如果你希望用户在 `openclaw.json` 中为插件配置一个变量，比如 `age`，那么第一步不是在 `index.ts` 里直接读，而是先在插件 manifest 里声明这个字段。
+
+### 1) `openclaw.plugin.json` 中如何配置
+
+`configSchema` 用来校验 `openclaw.json` 里 `plugins.entries.<插件 id>.config` 的内容。
+
+例如当前插件 `id` 为 `my-plugin`，希望用户必须提供一个整数类型的 `age`，可以这样写：
+
+```json
+{
+  "id": "my-plugin",
+  "name": "My Plugin",
+  "description": "A minimal custom plugin",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "age": {
+        "type": "integer",
+        "description": "Required age value provided from openclaw.json.",
+        "minimum": 0
+      }
+    },
+    "required": ["age"]
+  }
+}
+```
+
+这里几项最关键：
+
+1. `properties.age`：声明插件支持的配置字段名叫 `age`。
+2. `type: "integer"`：限制它必须是整数。
+3. `required: ["age"]`：表示用户必须配置这个字段。
+4. `additionalProperties: false`：只允许 schema 中声明过的字段，避免写错字段名却不自知。
+
+对应的 `openclaw.json` 示例：
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "my-plugin": {
+        "enabled": true,
+        "config": {
+          "age": 18
+        }
+      }
+    }
+  }
+}
+```
+
+也就是说：
+
+`openclaw.plugin.json` 负责“声明和校验配置结构”，而 `openclaw.json` 负责“真正填写配置值”。
+
+### 2) `index.ts` 中如何使用
+
+当插件加载后，`openclaw.json` 中该插件的 `config` 会注入到 `api.pluginConfig`。
+
+所以在 `index.ts` 里，应当通过 `api.pluginConfig?.age` 读取：
+
+```ts
+export default function register(api: any) {
+  api.registerTool({
+    name: "call_you",
+    description: "测试读取插件配置 age。",
+    parameters: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        name: {
+          type: "string",
+          description: "必填姓名",
+        },
+      },
+      required: ["name"],
+    },
+    execute: async (_callId: unknown, params: Record<string, unknown>) => {
+      const configuredAge = api.pluginConfig?.age;
+      const rawName = typeof params?.name === "string" ? params.name : "";
+      const name = rawName.trim();
+
+      if (!Number.isInteger(configuredAge) || configuredAge < 0) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "`age` must be configured as a non-negative integer in openclaw.json.",
+            },
+          ],
+        };
+      }
+
+      if (!name) {
+        return {
+          content: [{ type: "text", text: "`name` 不能为空。" }],
+        };
+      }
+
+      return {
+        content: [{ type: "text", text: `Calling ${name}, age ${configuredAge}` }],
+      };
+    },
+  });
+}
+```
+
+这里的关键点是：
+
+1. `api.pluginConfig`：这是插件专属配置入口，对应 `plugins.entries.<id>.config`。
+2. `api.pluginConfig?.age`：读取当前插件在 `openclaw.json` 中配置的 `age`。
+3. 运行时最好再做一次校验：即使 manifest 已经声明了 schema，执行时做兜底仍然更稳妥。
+4. 返回值中可以直接带上 `age`，例如：`Calling Alice, age 18`。
+
+### 3) 一句话总结
+
+如果一个变量需要在 `openclaw.json` 中配置并在插件里使用，标准做法就是：
+
+1. 在 `openclaw.plugin.json` 的 `configSchema` 里声明它。
+2. 在 `openclaw.json` 的 `plugins.entries.<id>.config` 中填写它。
+3. 在 `index.ts` 中通过 `api.pluginConfig` 读取它。
+
+## 五、最小测试清单
 
 1. 重载插件后确认启动日志输出正常。
 2. 调用 Tool：`name` 必填场景可返回结果。
 3. 调用 Tool：缺少 `name` 时返回清晰错误文本。
-4. 执行 CLI：`say-hi --name Alice` 输出 `Hi, Alice!`。
+4. 若 `openclaw.json` 中未配置 `age`，Tool 返回清晰配置错误。
+5. 若 `openclaw.json` 中配置了合法 `age`，返回结果中包含该值。
+6. 执行 CLI：`say-hi --name Alice` 输出 `Hi, Alice!`。
