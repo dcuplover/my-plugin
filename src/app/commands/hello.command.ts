@@ -5,6 +5,6 @@ export default defineCommand({
   name: "hello",
   description: "Say hello from my plugin",
   execute() {
-    return { text: "Hello from My Plugin!" };
+    return { text: "Hello from My Plugin！and use framework" };
   },
 });
