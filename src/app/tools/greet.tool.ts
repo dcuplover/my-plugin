@@ -19,7 +19,7 @@ export default defineTool({
 
     return {
       type: "text",
-      text: `${name}, 我的test工具执行成功了！`,
+      text: `${name}, ${greeter.greet(name)},我的test工具执行成功了！`,
     };
   },
 });
