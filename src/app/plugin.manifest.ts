@@ -16,10 +16,10 @@ const configSchema = {
 } as const;
 
 export default definePlugin<ExampleAppConfig>({
-  id: "app",
-  name: "App",
+  id: "my-plugin",
+  name: "My Plugin",
   version: "0.1.0",
-  description: "OpenClaw plugin app built on the convention microkernel framework.",
+  description: "是一个测试用的插件",
   configSchema,
   app: {
     root: "src/app",
@@ -30,7 +30,7 @@ export default definePlugin<ExampleAppConfig>({
     },
   },
   package: {
-    packageName: "@dcuplover/openclaw-app",
+    packageName: "@dcuplover/my-plugin",
     private: true,
   },
   build: {
