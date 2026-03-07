@@ -1,13 +1,18 @@
 import type {
+  CliDefinition,
+  CommandInvocationContext,
   FrameworkLogger,
   HostAdapter,
   HostCliRegistration,
   HostCommandRegistration,
   HostHookRegistration,
   HostToolRegistration,
+  KernelRuntime,
+  RuntimeContext,
 } from "../core/types";
 
 export interface OpenClawCliCommandLike {
+  command(name: string): OpenClawCliCommandLike;
   description(text: string): OpenClawCliCommandLike;
   action(handler: (...args: unknown[]) => unknown): OpenClawCliCommandLike;
   option?(flags: string, description?: string, defaultValue?: unknown): OpenClawCliCommandLike;
@@ -35,9 +40,13 @@ export interface OpenClawLikeApi {
     description?: string;
     acceptsArgs?: boolean;
     requireAuth?: boolean;
-    handler: (args?: string) => Promise<{ text: string }> | { text: string };
+    handler: (commandContext?: CommandInvocationContext) => Promise<{ text: string }> | { text: string };
   }): void;
-  on(event: string, handler: (payload: unknown) => Promise<void> | void): void;
+  on(
+    event: string,
+    handler: (payload: unknown) => Promise<void> | void,
+    opts?: { name?: string; description?: string; priority?: number }
+  ): void;
   pluginConfig?: Record<string, unknown>;
   logger?: {
     info?: (...args: unknown[]) => void;
@@ -69,6 +78,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function normalizeToolResult(result: unknown): { content: Array<{ type: string; text: string }>; details?: unknown } {
   if (isRecord(result) && Array.isArray(result.content)) {
     return result as { content: Array<{ type: string; text: string }>; details?: unknown };
+  }
+  if (isRecord(result) && typeof result.type === "string" && typeof result.text === "string") {
+    return { content: [{ type: result.type, text: result.text }] };
   }
   const text = typeof result === "string" ? result : JSON.stringify(result, null, 2);
   return { content: [{ type: "text", text }] };
@@ -132,6 +144,17 @@ function emitCommandResult(result: unknown, logger?: CliLoggerLike | FrameworkLo
   logger?.info?.(JSON.stringify(result, null, 2));
 }
 
+function normalizeCommandContext(commandContext?: CommandInvocationContext): CommandInvocationContext {
+  return {
+    senderId: commandContext?.senderId,
+    channel: commandContext?.channel,
+    isAuthorizedSender: commandContext?.isAuthorizedSender,
+    args: commandContext?.args,
+    commandBody: commandContext?.commandBody,
+    config: commandContext?.config,
+  };
+}
+
 export function createOpenClawAdapter(api: OpenClawLikeApi, logger?: FrameworkLogger): HostAdapter {
   return {
     registerTool(tool: HostToolRegistration): void {
@@ -156,8 +179,16 @@ export function createOpenClawAdapter(api: OpenClawLikeApi, logger?: FrameworkLo
       logger?.info("Registered OpenClaw tool", { name: tool.name });
     },
     registerHook(hook: HostHookRegistration): void {
-      api.on(hook.event, hook.handler);
-      logger?.info("Registered OpenClaw hook", { event: hook.event, priority: hook.priority });
+      api.on(hook.event, hook.handler, {
+        name: hook.name,
+        description: hook.description,
+        priority: hook.priority,
+      });
+      logger?.info("Registered OpenClaw hook", {
+        name: hook.name,
+        event: hook.event,
+        priority: hook.priority,
+      });
     },
     registerCli(cli: HostCliRegistration): void {
       api.registerCli(
@@ -179,11 +210,49 @@ export function createOpenClawAdapter(api: OpenClawLikeApi, logger?: FrameworkLo
       api.registerCommand({
         name: command.name,
         description: command.description,
-        acceptsArgs: command.acceptsArgs,
-        requireAuth: command.requireAuth,
-        handler: async (args) => command.handler(args),
+        acceptsArgs: command.acceptsArgs ?? false,
+        requireAuth: command.requireAuth ?? true,
+        handler: async (commandContext) => command.handler(normalizeCommandContext(commandContext)),
       });
       logger?.info("Registered OpenClaw command", { name: command.name });
     },
   };
+}
+
+/**
+ * Register a CLI definition synchronously with OpenClaw's Commander program.
+ *
+ * OpenClaw may not `await` the async `register(api)` call, so `api.registerCli`
+ * must be invoked synchronously — before any `await` — to ensure Commander
+ * recognises the command at startup. The action handler defers execution until
+ * the kernel's bootstrap promise resolves.
+ */
+export function eagerRegisterCli<TConfig = unknown>(
+  api: OpenClawLikeApi,
+  cliDef: CliDefinition<TConfig>,
+  runtimePromise: Promise<KernelRuntime<TConfig>>,
+  logger?: FrameworkLogger
+): void {
+  api.registerCli(
+    ({ program, logger: cliLogger }) => {
+      program
+        .command(cliDef.name)
+        .description(cliDef.description ?? "")
+        .action(async (...actionArgs: unknown[]) => {
+          const runtime = await runtimePromise;
+          const context: RuntimeContext<TConfig> = {
+            config: runtime.container.resolve<TConfig>("config"),
+            container: runtime.container,
+            diagnostics: runtime.diagnostics,
+            logger: runtime.container.resolve<FrameworkLogger>("logger"),
+            host: runtime.container.resolve<HostAdapter>("host"),
+          };
+          const normalizedArgs = normalizeCliArgs(actionArgs);
+          const result = await cliDef.execute(normalizedArgs, context);
+          emitCommandResult(result, cliLogger ?? logger);
+        });
+    },
+    { commands: [cliDef.name] }
+  );
+  logger?.info("Eager-registered OpenClaw CLI", { name: cliDef.name });
 }
