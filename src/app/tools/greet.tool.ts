@@ -18,8 +18,8 @@ export default defineTool({
     const name = typeof params.name === "string" ? params.name : "world";
 
     return {
-      ok: true,
-      message:"test !!!!!",
+      type: "text",
+      text: `${name}, 我的test工具执行成功了！`,
     };
   },
 });
